@@ -1,0 +1,138 @@
+## 🔍 Overview
+
+**Goal:** Build a job‑seeker assistant that:
+
+1. **Analyzes** resumes using current best practices for formatting, impact, keyword optimization, ATS compatibility.
+2. **Searches the web** for latest trends, benchmarks, and real-world resume successes.
+3. **Learns** from public resume data, forum insights, and expert advice.
+4. **Provides targeted advice** and concrete rewrites—ranked suggestions with source citations.
+5. **Guarantees zero hallucination** via strict reasoning and citation policies.
+
+---
+
+## 📐 Architecture & Data Flow
+
+### 1. **Input Phase**
+
+* Accept user resume text or upload (PDF/.doc/.txt).
+* Optional: Target job description or role (title, company, responsibilities).
+
+### 2. **Web Search Module**
+
+* Trigger 2-3 searches per user session:
+
+  * “best practices resume writing 2025”
+  * “resume examples \[job title]”
+  * “resume bullet examples quantify achievements”
+* **Requirement:** At least one minimal rewrite search (e.g., exactly “best practices resume writing 2025”).
+* Retrieve authoritative sources (Forbes, LinkedIn, Reddit threads, etc.).
+
+### 3. **Analysis Engine**
+
+* Parse resume into sections (Summary, Experience, Skills, Education, etc.).
+* Compare each section against web‑retrieved best practices:
+
+  * E.g., prioritized metrics (“increased sales by 20%”) ([linkedin.com][1], [reddit.com][2], [tealhq.com][3], [wamc.org][4]).
+  * STAR model bullet structure ([vogue.com][5]).
+  * Format/structure tips (1–2 pages, fonts, margins) .
+
+### 4. **Rewrite Module**
+
+* Use modular prompts per section:
+
+  * **Summary**: “Rewrite user’s summary to highlight top 3 achievements using action‑result language.”
+  * **Experience**: “Convert bullet to STAR format, emphasize metrics, align with job description.”
+  * **Skills**: “Group skills into categories, front‑load ATS keywords that match the job.”
+
+* Generate multiple suggestion tiers:
+
+  1. **Minor enhancement** (polishing).
+  2. **Moderate rewrite** (stronger language, metrics).
+  3. **Heavy rewrite** (reorder sections, add omitted achievements).
+
+* Tag suggestions with **source rationale**, e.g., “based on LinkedIn advice to show not tell” ([careercontessa.com][6], [glamour.com][7], [linkedin.com][1], [tealhq.com][8]).
+
+### 5. **Quality Control / No‑Hallucination Mechanism**
+
+* **Clipboard of citations**: Every transformed bullet or rewrite must reference at least one web source.
+* **Cross‑check facts**: If user claims “improved uptime by X%,” the model asks for backup data.
+* **Reject unknown claims**: If the model can’t verify, it prompts user instead of guessing.
+* **Transparency layer**: At least one line summarizing “Changed phrase \_\_\_ to \_\_\_ based on best practice from \[source]”.
+
+### 6. **Output Phase**
+
+* Present a **side‑by‑side diff view**: original vs. suggestion.
+* Provide **rationale footnotes** with citations.
+* Offer **scores** per section (Impact, Clarity, ATS‑readiness, Format).
+* Provide **action checklist**: e.g., add metrics, tighten language, adjust formatting margins.
+
+---
+
+## ⚙️ Pseudocode Example
+
+```python
+def analyze_resume(resume_text, job_description=None):
+    sources = web.search([
+       "best practices resume writing 2025",
+       f"resume examples {job_description.title}" if job_description else "resume examples"
+    ])
+    advice = extract_key_principles(sources)
+    parsed = parse_resume_sections(resume_text)
+
+    suggestions = {}
+    for section, content in parsed.items():
+        for bullet in content.bullets:
+            for principle in advice:
+                if not matches(bullet, principle.rule):
+                    suggestions[section].append(
+                        rewrite_bullet(bullet, principle, job_description)
+                    )
+    return format_output(parsed, suggestions)
+
+def rewrite_bullet(bullet, principle, job_description):
+    prompt = f"""Your task: Rewrite this bullet to satisfy rule "{principle.name}" 
+    (source: {principle.source_title}). Use action‑result metrics."""
+    response = llm.call(prompt + "\nOriginal bullet: " + bullet.text)
+    return Suggestion(original=bullet.text, revised=response, source=principle.source_title)
+```
+
+---
+
+## 🌟 Example Principle Library
+
+| Principle                   | Source(s)                                  | Prompt Intent                                                            |
+| --------------------------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| **Quantify achievements**   | ([vogue.com][5], [myperfectresume.com][9]) | "Turn 'Managed team' into 'Led 6‑person team to deliver X, saving \$Y'." |
+| **STAR structure**          |                                            | "Convert into Challenge–Action–Result."                                  |
+| **ATS optimization**        |                                            | "Insert job posting keywords."                                           |
+| **Format readability**      |                                            | "Ensure font ≥11pt, margins ≥0.8in."                                     |
+| **Recent experience focus** |                                            | "Showcase only last 5–10 years; add earlier under 'Prior Experience'."   |
+
+---
+
+## 💡 Best Practices for Using the LLM
+
+1. **Be explicit in prompts**: Include role, metrics, tone (“concise”, “impactful”).
+2. **Always request multiple versions**: e.g., “Rewrite bullet 3 ways”.
+3. **Ask for self‑critique**: “Rate this bullet on impact 1–10 and justify based on source.”
+
+---
+
+## ✅ No‑Hallucination Policies (🔥 Hard Asterisks)
+
+* **✳️ NEVER fabricate** metrics, dates, roles.
+* **✳️ ALWAYS flag** when user-provided claims lack verification.
+* **✳️ ALWAYS cite** at least one valid external source for every rewrite suggestion.
+
+---
+
+## 🎯 Summary
+
+This system ensures:
+
+* **Evidence-based advice** grounded in up‑to‑date sources.
+* **Measurable rewrites**, not empty platitudes.
+* **Structural coaching**, lit by decades of resume crafting best practices.
+* **Built-in integrity**, with zero hallucination guarantees.
+
+---
